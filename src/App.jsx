@@ -39,11 +39,14 @@ export default function App() {
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
 
-  // Helper to extract video ID from YouTube URL
+  // Helper to extract video ID from YouTube URL (supports watch, shorts, live, youtu.be, and raw ID)
   const extractVideoId = (url) => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
+    if (!url) return null;
+    const trimmed = url.trim();
+    if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+    const regExp = /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/|live\/))([\w-]{11})/;
+    const match = trimmed.match(regExp);
+    return match ? match[1] : null;
   };
 
   // Convert seconds to readable MM:SS
@@ -121,21 +124,30 @@ export default function App() {
     }
 
     try {
-      // Call local backend (proxied via Vite server to port 3001)
-      const response = await fetch(`/api/video-info?url=${encodeURIComponent(videoUrl)}`);
-      
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to fetch video details.');
+      // 1. Call local backend (proxied via Vite server to port 3001, fallback to direct port 3001)
+      let response;
+      try {
+        response = await fetch(`/api/video-info?url=${encodeURIComponent(videoUrl)}`);
+      } catch (proxyErr) {
+        console.warn('Proxy fetch failed, attempting direct backend connection...', proxyErr.message);
+        response = await fetch(`http://localhost:3001/api/video-info?url=${encodeURIComponent(videoUrl)}`);
       }
 
       const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || `Backend responded with error status ${response.status}`);
+      }
+      
+      if (!data.metadata) {
+        throw new Error('Received unexpected response format from server.');
+      }
       
       // Successfully fetched metadata and transcript
       setActiveVideo({
         videoId: data.metadata.videoId,
         metadata: data.metadata,
-        transcript: data.transcript
+        transcript: data.transcript || []
       });
 
       // Initialize Document State
@@ -148,7 +160,7 @@ export default function App() {
       });
 
       // Initialize sections with 3 default empty cards at logical positions
-      const dur = data.metadata.duration;
+      const dur = data.metadata.duration || 300;
       const initialSections = [
         { id: 'sec-1', title: 'Introduction', timestamp: 0, summary: '', bullets: [''], imageUrl: '' },
         { id: 'sec-2', title: 'Key Concepts', timestamp: Math.floor(dur / 3), summary: '', bullets: [''], imageUrl: '' },
@@ -156,12 +168,21 @@ export default function App() {
       ];
       setSections(initialSections);
 
+      if (data.warning) {
+        setError(data.warning);
+      }
+
     } catch (err) {
-      console.warn('Backend fetch failed, offering standalone mode:', err.message);
-      setError(
-        `The automated transcript extractor could not connect. This is common if the local backend server is not running.
-        You can still use the app by selecting a pre-loaded Demo Video below, or manually pasting subtitles.`
-      );
+      console.warn('Backend fetch failed:', err.message);
+      const isNetworkError = err.name === 'TypeError' || err.message.toLowerCase().includes('failed to fetch') || err.message.toLowerCase().includes('network');
+      
+      if (isNetworkError) {
+        setError(
+          'Could not connect to the local backend server (http://localhost:3001). Please ensure "npm run dev" is active in your terminal. You can still use the app by selecting a pre-loaded Demo Video below, or manually pasting subtitles.'
+        );
+      } else {
+        setError(err.message || 'An error occurred while fetching video details.');
+      }
     } finally {
       setIsLoading(false);
     }
