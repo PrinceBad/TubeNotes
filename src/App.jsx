@@ -110,6 +110,51 @@ export default function App() {
     return parsed;
   };
 
+  // Safe fetch helper that handles CORS, proxies, and non-JSON HTML error pages gracefully
+  const fetchVideoData = async (url) => {
+    const endpoints = [
+      `http://localhost:3001/api/video-info?url=${encodeURIComponent(url)}`,
+      `/api/video-info?url=${encodeURIComponent(url)}`
+    ];
+
+    let lastError = null;
+
+    for (const endpoint of endpoints) {
+      try {
+        const response = await fetch(endpoint, {
+          headers: { 'Accept': 'application/json' }
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+        
+        // Guard against HTML error pages (like "The page cannot be found") causing JSON syntax crashes
+        if (!contentType.includes('application/json')) {
+          const previewText = await response.text();
+          console.warn(`Endpoint ${endpoint} returned non-JSON (${response.status}):`, previewText.slice(0, 100));
+          lastError = new Error(`Server returned non-JSON response (${response.status})`);
+          continue; // Try next endpoint
+        }
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || `Server returned error code ${response.status}`);
+        }
+
+        if (!data.metadata) {
+          throw new Error('Server returned invalid data format.');
+        }
+
+        return data; // Success!
+      } catch (err) {
+        lastError = err;
+        console.warn(`Failed fetching from ${endpoint}:`, err.message);
+      }
+    }
+
+    throw lastError || new Error('Could not connect to TubeNotes backend service.');
+  };
+
   // Fetch from Express API
   const handleFetchVideo = async (e) => {
     if (e) e.preventDefault();
@@ -118,30 +163,13 @@ export default function App() {
 
     const videoId = extractVideoId(videoUrl);
     if (!videoId) {
-      setError('Please enter a valid YouTube video URL.');
+      setError('Please enter a valid YouTube video URL or ID.');
       setIsLoading(false);
       return;
     }
 
     try {
-      // 1. Call local backend (proxied via Vite server to port 3001, fallback to direct port 3001)
-      let response;
-      try {
-        response = await fetch(`/api/video-info?url=${encodeURIComponent(videoUrl)}`);
-      } catch (proxyErr) {
-        console.warn('Proxy fetch failed, attempting direct backend connection...', proxyErr.message);
-        response = await fetch(`http://localhost:3001/api/video-info?url=${encodeURIComponent(videoUrl)}`);
-      }
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || `Backend responded with error status ${response.status}`);
-      }
-      
-      if (!data.metadata) {
-        throw new Error('Received unexpected response format from server.');
-      }
+      const data = await fetchVideoData(videoUrl);
       
       // Successfully fetched metadata and transcript
       setActiveVideo({
@@ -174,11 +202,11 @@ export default function App() {
 
     } catch (err) {
       console.warn('Backend fetch failed:', err.message);
-      const isNetworkError = err.name === 'TypeError' || err.message.toLowerCase().includes('failed to fetch') || err.message.toLowerCase().includes('network');
+      const isNetworkError = err.name === 'TypeError' || err.message.toLowerCase().includes('failed to fetch') || err.message.toLowerCase().includes('network') || err.message.toLowerCase().includes('could not connect');
       
       if (isNetworkError) {
         setError(
-          'Could not connect to the local backend server (http://localhost:3001). Please ensure "npm run dev" is active in your terminal. You can still use the app by selecting a pre-loaded Demo Video below, or manually pasting subtitles.'
+          'Could not connect to the local backend server (http://localhost:3001). Please ensure "npm run dev" is running in your terminal. You can still use the app by selecting a pre-loaded Demo Video below, or manually pasting subtitles.'
         );
       } else {
         setError(err.message || 'An error occurred while fetching video details.');
