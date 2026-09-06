@@ -1,4 +1,4 @@
-# TubeNotes PRO (Yt-2-Pdf) 🎥 ➔ 📄
+# TubeNotes 🎥 ➔ 📄
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![React](https://img.shields.io/badge/React-19.0-61dafb?logo=react)](https://react.dev/)
@@ -45,8 +45,8 @@
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/PrinceBad/Yt-2-Pdf.git
-   cd Yt-2-Pdf
+   git clone https://github.com/PrinceBad/TubeNotes.git
+   cd TubeNotes
    ```
 
 2. Install dependencies:
@@ -66,5 +66,12 @@
 
 ---
 
+## ⚖️ Disclaimer
+
+This project is intended strictly for personal, educational, and fair-use archiving purposes. Users are responsible for complying with YouTube's Terms of Service and respecting content creators' copyrights.
+
+---
+
 ## 📄 License
-MIT License. Created by Prince Badsiwal.
+
+MIT License. Copyright (c) 2026 Prince Badsiwal. See [LICENSE](LICENSE) for details.
