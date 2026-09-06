@@ -138,3 +138,5 @@ app.get('/api/video-info', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`[Server] YouTube-to-PDF backend running on http://localhost:${PORT}`);
 });
+
+// TubeNotes Engine: High-performance vector compilation architecture
