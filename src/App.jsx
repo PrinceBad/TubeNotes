@@ -110,12 +110,11 @@ export default function App() {
     return parsed;
   };
 
-  // Safe fetch helper that handles CORS, Vercel Serverless, and non-JSON HTML error pages gracefully
+  // Safe fetch helper that handles CORS, proxies, and non-JSON HTML error pages gracefully
   const fetchVideoData = async (url) => {
     const isLocal = typeof window !== 'undefined' && 
       (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-    // On Vercel production, avoid insecure HTTP mixed-content calls to localhost:3001
     const endpoints = isLocal
       ? [
           `http://localhost:3001/api/video-info?url=${encodeURIComponent(url)}`,
