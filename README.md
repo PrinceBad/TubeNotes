@@ -9,6 +9,17 @@
 
 ---
 
+## 📖 About TubeNotes
+
+Watching 2-hour university lectures, deep-dive tech tutorials, or conference keynotes often leaves students and engineers with messy notes, disjointed screenshots, or unformatted text dumps.
+
+**TubeNotes** was built to turn passive video watching into active, structured knowledge retention:
+* **Interactive Timeline**: Scrub and sync transcripts with the video player in real time.
+* **Smart Slide Capture**: Grab visual diagrams, slide decks, and whiteboard moments straight into note cards.
+* **Vector-Grade Output**: Instead of blurry canvas screenshots, TubeNotes compiles real selectable text with auto-pagination, headers, and theme styling.
+
+---
+
 ## ✨ Key Features
 
 * **⚡ Native Vector PDF Engine**: Generates 100% searchable, copy-pasteable vector PDFs directly using `jsPDF`. Crystal-clear typography at any zoom level with ultra-compact file sizes (~70KB–150KB).
