@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Plus, Play, ScrollText } from 'lucide-react';
+import { Search, Plus, ScrollText } from 'lucide-react';
 
 /**
  * TranscriptTimeline Component

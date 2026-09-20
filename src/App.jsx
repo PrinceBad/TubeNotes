@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Youtube, FileText, Settings, Download, X, Plus, AlertCircle, Sparkles, Clipboard, RefreshCw } from 'lucide-react';
+import { Youtube, FileText, Download, X, AlertCircle, Sparkles, Clipboard } from 'lucide-react';
 
 import YoutubePlayer from './components/YoutubePlayer';
 import TranscriptTimeline from './components/TranscriptTimeline';

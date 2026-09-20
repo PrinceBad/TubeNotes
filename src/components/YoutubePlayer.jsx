@@ -9,6 +9,11 @@ export default function YoutubePlayer({ videoId, onTimeUpdate, seekTime }) {
   const playerRef = useRef(null);
   const containerId = 'youtube-iframe-player';
   const timerRef = useRef(null);
+  const onTimeUpdateRef = useRef(onTimeUpdate);
+
+  useEffect(() => {
+    onTimeUpdateRef.current = onTimeUpdate;
+  });
 
   useEffect(() => {
     // 1. Ensure the YouTube Iframe API script tag is injected
@@ -67,7 +72,9 @@ export default function YoutubePlayer({ videoId, onTimeUpdate, seekTime }) {
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
         if (player && typeof player.getCurrentTime === 'function') {
-          onTimeUpdate(player.getCurrentTime());
+          if (onTimeUpdateRef.current) {
+            onTimeUpdateRef.current(player.getCurrentTime());
+          }
         }
       }, 250);
     };
